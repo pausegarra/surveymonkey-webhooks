@@ -1,74 +1,94 @@
 "use client";
 
-import Loading from '@/app/webhooks/loading';
-import { SelectInput, TextInput, TransferList } from './FormComponents/index';
-import { eventTypes } from '@/constants';
-import { useRouter } from 'next/navigation';
-import React from 'react';
-import Swal from 'sweetalert2';
-import { localApiService } from '@/services/LocalApiService';
-import { httpErrorNames } from '@/utils/httpErrorCodes';
+import Loading from "@/app/webhooks/loading";
+import { SelectInput, TextInput, TransferList } from "./FormComponents/index";
+import { eventTypes } from "@/constants";
+import { useRouter } from "next/navigation";
+import React from "react";
+import Swal from "sweetalert2";
+import { localApiService } from "@/services/LocalApiService";
+import { httpErrorNames } from "@/utils/httpErrorCodes";
+import { revalidatePath } from "next/cache";
 
 interface Props {
-  initData?: Omit<Webhook, 'href' | 'object_type'> | null;
+  initData?: Omit<Webhook, "href" | "object_type"> | null;
 }
 
-export function WebhookForm ({ initData }: Props) {
-  const [selected, setSelected] = React.useState<string[]>(initData?.object_ids || []);
+export function WebhookForm({ initData }: Props) {
+  const [selected, setSelected] = React.useState<string[]>(
+    initData?.object_ids || [],
+  );
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const router = useRouter();
-  const [data, setData] = React.useState<Omit<Webhook, 'id' | 'href' | 'object_ids' | 'object_type'>>(initData || {
-    name: '',
-    subscription_url: '',
-    event_type: ''
-  });
+  const [data, setData] = React.useState<
+    Omit<Webhook, "id" | "href" | "object_ids" | "object_type">
+  >(
+    initData || {
+      name: "",
+      subscription_url: "",
+      event_type: "",
+    },
+  );
 
-  function handleChange (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) {
     const { name, value } = e.currentTarget;
-    setData(old => ({
+    setData((old) => ({
       ...old,
-      [name]: value
+      [name]: value,
     }));
   }
 
-  async function handleUpdate (e: React.FormEvent) {
+  async function handleUpdate(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
 
     if (!initData) return;
 
     try {
-      await localApiService.updateWebhook(initData.id, data.name, data.subscription_url, data.event_type, selected);
-      router.push('/webhooks');
+      await localApiService.updateWebhook(
+        initData.id,
+        data.name,
+        data.subscription_url,
+        data.event_type,
+        selected,
+      );
+      router.push("/webhooks");
     } catch (err: any) {
       return Swal.fire({
-        icon: 'error',
-        title: 'Oops...',
+        icon: "error",
+        title: "Oops...",
         text: err.error.error.error.message,
         customClass: {
-          container: 'bg-dark text-primary'
-        }
+          container: "bg-dark text-primary",
+        },
       });
     } finally {
       setIsLoading(false);
     }
   }
 
-  async function handleCreate (e: React.FormEvent) {
+  async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      await localApiService.createWebhook(data.name, data.subscription_url, data.event_type, selected);
-      router.push('/webhooks');
+      await localApiService.createWebhook(
+        data.name,
+        data.subscription_url,
+        data.event_type,
+        selected,
+      );
+      router.push("/webhooks");
     } catch (err: any) {
       return Swal.fire({
-        icon: 'error',
-        title: 'Oops...',
+        icon: "error",
+        title: "Oops...",
         text: err.error.error.error.message,
         customClass: {
-          container: 'bg-dark text-primary'
-        }
+          container: "bg-dark text-primary",
+        },
       });
     } finally {
       setIsLoading(false);
@@ -108,15 +128,40 @@ export function WebhookForm ({ initData }: Props) {
 
   return (
     <form onSubmit={!initData ? handleCreate : handleUpdate}>
-      <TextInput required={false} name="name" label='Name' onChange={handleChange} value={data.name} />
-      <TextInput required={false} type='url' name="subscription_url" label='Subscription URL' onChange={handleChange} value={data.subscription_url} />
-      <SelectInput required={false} label='Event type' name="event_type" options={eventTypes} onChange={handleChange} value={data.event_type} />
+      <TextInput
+        required={false}
+        name="name"
+        label="Name"
+        onChange={handleChange}
+        value={data.name}
+      />
+      <TextInput
+        required={false}
+        type="url"
+        name="subscription_url"
+        label="Subscription URL"
+        onChange={handleChange}
+        value={data.subscription_url}
+      />
+      <SelectInput
+        required={false}
+        label="Event type"
+        name="event_type"
+        options={eventTypes}
+        onChange={handleChange}
+        value={data.event_type}
+      />
       <TransferList selected={selected} setSelected={setSelected} />
-      <div className='text-center mt-9'>
-        {!isLoading ?
-          <input type="submit" value={!initData ? 'Create webhook' : 'Edit webhook'} className='px-4 py-2 bg-primary text-black rounded-md hover:bg-black hover:text-primary duration-200 ease-in-out border border-primary cursor-pointer' /> :
+      <div className="mt-9 text-center">
+        {!isLoading ? (
+          <input
+            type="submit"
+            value={!initData ? "Create webhook" : "Edit webhook"}
+            className="bg-primary hover:text-primary border-primary cursor-pointer rounded-md border px-4 py-2 text-black duration-200 ease-in-out hover:bg-black"
+          />
+        ) : (
           <Loading />
-        }
+        )}
       </div>
     </form>
   );

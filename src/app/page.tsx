@@ -1,11 +1,19 @@
-import Heading from '@/components/Heading';
-import TokenForm from '@/components/TokenForm';
-import React from 'react';
+import Heading from "@/components/Heading";
+import TokenForm from "@/components/TokenForm";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import React from "react";
 
-function HomePage () {
+function HomePage() {
+  const cookie = cookies().get("smwm_token");
+
+  if (cookie) {
+    redirect("/webhooks");
+  }
+
   return (
     <>
-      <Heading subTitle='Insert your API token'></Heading>
+      <Heading subTitle="Insert your API token"></Heading>
       <TokenForm />
     </>
   );
